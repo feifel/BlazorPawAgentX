@@ -20,9 +20,21 @@ jobs:
 
     - name: Publish with dotnet
       run: dotnet publish -c Release -o release 
+    
+    # changes the base-tag in index.html from '/' to 'BlazorGitHubPagesDemo' to match GitHub Pages repository subdirectory
+    - name: Change base-tag in index.html from / to BlazorPawAgentX
+      run: sed -i 's/<base href="\/" \/>/<base href="\/BlazorPawAgentX\/" \/>/g' release/wwwroot/index.html
+    
+    # add .nojekyll file to tell GitHub pages to not treat this as a Jekyll project. (Allow files and folders starting with an underscore)
+    - name: Add .nojekyll file
+      run: touch release/wwwroot/.nojekyll
 
+    # copy index.html to 404.html to serve the same file when a file is not found
+    - name: copy index.html to 404.html
+      run: cp release/wwwroot/index.html release/wwwroot/404.html
+      
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/wwwroot
+        publish_dir: ./release/wwwroot
