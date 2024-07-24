@@ -1,0 +1,111 @@
+﻿@page "/map"
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using BlazorPawAgentX.Commands
+@using BlazorPawAgentX.Components
+@using Microsoft.AspNetCore.SignalR.Client
+@using BlazorPawAgentX.Models;
+@using System.Text.Json
+@using System.Timers;
+@implements IAsyncDisposable
+
+<PageTitle>Agent-X</PageTitle>
+
+<center>
+    <h1>@Game.Player?.Name</h1>
+</center>
+
+<Popup @ref="popupRef" />
+<table style="width:100%;">
+    <tr>
+        <th>Pos</th>
+        <th>Name</th>
+        <th>Latitude</th>
+        <th>Logitude</th>
+        <th>NextUpdate</th>
+    </tr>
+    @for (int i = 0; i < Game.Players.Count; i++)
+    {
+        <tr>
+            <td style="text-align:center;background-color:@Game.Players[i].Color">&nbsp;</td>
+            <td>@Game.Players[i].Name</td>
+            <td>@Game.Players[i].Latitude</td>
+            <td>@Game.Players[i].Longitude</td>
+            <td>@FormatNextUpdate(Game.Players[i])</td >
+        </tr>
+    }
+</table>
+<br />
+<div id="map" style="height: 500px; width: 100%;"></div>
+<br />
+<button class="btn btn-primary" @onclick="Terminate">Terminate</button>
+
+@code {
+    private Popup? popupRef;
+    bool isMapInitialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Game.ErrorObserver += OnError;
+        Game.PositionProvider = GetGeoLocation;
+        Timer playerTimer = new Timer(TimeSpan.FromSeconds(1));
+        playerTimer.Elapsed += UpdatePlayerPositions;
+        playerTimer.Start();
+        await Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Game.ErrorObserver -= OnError;
+        await Task.CompletedTask;
+        Game.TerminateGame();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var pos = await GetGeoLocation();
+            await JS.InvokeVoidAsync("initLeafletMap", new object[] { pos.Latitude, pos.Longitude});
+            isMapInitialized = true;
+        }
+    }
+
+    private async Task<Position> GetGeoLocation()
+    {
+        var position = await JS.InvokeAsync<Position>("getGeoLocation");
+        // TODO: remove this random offset, which is just used for tests of muliple players on the same device
+        position.Latitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
+        position.Longitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
+        return position;
+    }
+
+    private async void UpdatePlayerPositions(Object? source, ElapsedEventArgs e)
+    {
+        StateHasChanged();
+        if (isMapInitialized && Game.ArePlayerPositionsUpdated)
+        {
+            foreach (var player in Game.Players)
+            {
+                await JS.InvokeVoidAsync("addOrUpdateMarker", new object[] { player.Name, player.Color, player.Latitude, player.Longitude });
+            }
+        }
+    }
+
+    private string FormatNextUpdate(Player player)
+    {
+        if (!player.IsHost) return "";
+        return $"{((int)(player.NextUpdate.Subtract(DateTimeOffset.Now).TotalSeconds + 0.5))} s";
+    }
+
+    private void OnError(string title, string description)
+    {
+        popupRef?.Show(description, title);
+    }
+
+    private void Terminate()
+    {
+        Navigation.NavigateTo("/");
+        Game.TerminateGame();
+    }
+}

@@ -1,0 +1,22 @@
+﻿@page "/help"
+@inject NavigationManager Navigation
+
+<PageTitle>Agent-X Help</PageTitle>
+<div style="display: flex; justify-content: flex-end;">
+    <button class="btn btn-primary" style="position: absolute;" @onclick="Cancel">Go Back</button>
+</div>
+<h1>Help</h1>
+
+
+<p>Agent-X is an outdoor game that requires at least 2 players. The first player is Agent-X and all other players are police officers that try to catch Agent-X.</p>
+<p>All player see a map showing where the all the players are. The position of police officers is updated in real time, but the position of Agent-X is updated only every 60 seconds (configurable).</p>
+<p>The player that wants to be Agent-X need to create a new game. This creates a new Game-Id for that game and displays it to the Agent-X player. The other players can join a game by selecting the related Game-Id. The Agent-X player can see who has joined the Game. Once all the players have joined, the Agent-X player can start the Game. From then on, other players can no longer join the game.</p>
+<p>The game ends when Agent-X is catched by one of the other players. Agent-X can then terminate the game.</p>
+
+
+@code {
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

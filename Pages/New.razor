@@ -1,0 +1,64 @@
+﻿@page "/new"
+@inject NavigationManager Navigation
+@using BlazorPawAgentX.Commands
+@using Microsoft.AspNetCore.SignalR.Client
+@using BlazorPawAgentX.Models;
+@implements IAsyncDisposable
+
+<PageTitle>Agent-X - New Game</PageTitle>
+
+<center>
+    <p style="font-size:small">Game-ID</p>
+    <h1>- @Game.GameId -</h1>
+</center>
+<br />
+<p>Provide the Game-ID above to the players that want to join.</p>
+<h2>Players:</h2>
+<table>
+    <tr>
+        <th>Nr.</th>
+        <th>Name</th>
+        <th>ConnectionId</th>
+    </tr>
+    @for (int i = 0; i < Game.Players.Count; i++)
+    {
+        <tr>
+            <td style="text-align:center;">@(i+1)</td>
+            <td>@Game.Players[i].Name</td>
+            <td>@Game.Players[i].ConnectionId</td>
+        </tr>
+    }
+    
+</table>
+<br />
+<div class="btn-bar">
+    <button class="btn btn-primary btn-bar-btn" @onclick="StartGame">Start</button>
+    <div style="width: 20px"></div>
+    <button class="btn btn-primary btn-bar-btn" @onclick="Cancel">Cancel</button>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Game.PlayerListObserver += StateHasChanged;
+        Game.NewGame();
+        await Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Game.PlayerListObserver -= StateHasChanged;
+        await Task.CompletedTask;
+    }
+
+    private async void StartGame()
+    {
+        Navigation.NavigateTo("/map");
+        await Game.StartGame();
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

@@ -1,0 +1,115 @@
+﻿@page "/join"
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using BlazorPawAgentX.Commands
+@using BlazorPawAgentX.Components
+@using BlazorPawAgentX.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IAsyncDisposable
+
+<PageTitle>Agent-X - Join Game</PageTitle>
+
+<h1>Join to an existing game</h1>
+
+<Popup @ref="popupRef" />
+<br />
+<EditForm Model="@FormData">
+    <div class="row mb-1 mt-1">
+        <label for="GameId" class="col-sm-2 col-form-label">Game-Id</label>
+        <div class="col-sm-10">
+            <InputSelect id="GameId" @bind-Value="FormData.GameId" @bind-Value:after="OnGameIdSelectedAsync" class="form-select">
+                <option value="">Select a valid Game-Id</option>
+                <option value="RefreshGameIds">Refresh the Game-Ids below</option>
+                @foreach (var game in Game.GameIdList)
+                {
+                    <option value="@game.HostId">@game.GameId</option>
+                }
+            </InputSelect>
+        </div>
+    </div>
+    <div class="row mb-1 mt-1">
+        <label for="PlayerName" class="col-sm-2 col-form-label">Name</label>
+        <div class="col-sm-10">
+            <InputText id="PlayerName" @bind-Value="FormData.PlayerName" class="form-control" />
+        </div>
+    </div>
+</EditForm>
+<br />
+
+<div class="btn-bar">
+    <button class="btn btn-primary btn-bar-btn" @onclick="JoinGame">Join</button>
+    <div style="width: 20px"></div>
+    <button class="btn btn-primary btn-bar-btn" @onclick="Cancel">Cancel</button>
+</div>
+
+@code {
+    private JoinDto FormData { get; set; } = new ();
+    private Popup? popupRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Game.GameIdListObserver += OnGameIdListChanged;
+        Game.PositionProvider = GetGeoLocation;
+        await Game.UpdateGameIdList();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Game.GameIdListObserver -= OnGameIdListChanged;
+        await Task.CompletedTask;
+    }
+
+    private void OnGameIdListChanged()
+    {
+        FormData.GameId = Game.GameIdList[0].HostId;
+        StateHasChanged();
+    }
+
+    private async Task<Position> GetGeoLocation()
+    {
+        var position = await JS.InvokeAsync<Position>("getGeoLocation");
+        // TODO: remove this random offset, which is just used for tests of muliple players on the same device
+        position.Latitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
+        position.Longitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
+        return position;
+    }
+
+    private async Task JoinGame()
+    {
+        if (FormData.GameId == null || "RefreshGameIds".Equals(FormData.GameId) || FormData.GameId.Length == 0)
+        {
+            popupRef?.Show("Please select a valid Game-Id from the dropdown list!", "Invalid Game-Id");
+            return;
+        }
+        await Game.JoinGame(FormData.PlayerName, FormData.GameId);
+        Navigation.NavigateTo("/map");
+    }
+
+    private void StartGame()
+    {
+        Navigation.NavigateTo("/map");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task OnGameIdSelectedAsync()
+    {
+        if ("RefreshGameIds".Equals(FormData.GameId))
+        {
+            Game.GameIdList.Clear();
+            FormData.GameId = "";
+            StateHasChanged();
+            _ = Task.Delay(100).ContinueWith(x => Game.HubConnection.SendAsync("ServiceLookup", "AgentXSession"));
+            await Task.CompletedTask;
+        }        
+    }
+
+    private record JoinDto()
+    {
+        public string GameId { get; set; } = "";
+        public string PlayerName { get; set; } = "";
+    };    
+}
