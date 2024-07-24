@@ -10,19 +10,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v1
+    - name: Set up Jekyll
+      uses: actions/setup-ruby@v1
       with:
-        dotnet-version: '8.0.x'
+        ruby-version: '2.7'
 
-    - name: Publish with dotnet
-      run: dotnet publish -c Release -o build
+    - name: Install dependencies
+      run: bundle install
+
+    - name: Build site
+      run: JEKYLL_ENV=production bundle exec jekyll build --baseurl "/BlazorPawAgentX"
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./build/wwwroot
+        publish_dir: ./_site
