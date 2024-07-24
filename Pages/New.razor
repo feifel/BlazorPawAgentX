@@ -53,12 +53,12 @@
 
     private async void StartGame()
     {
-        Navigation.NavigateTo("/map");
+        Navigation.NavigateTo("map");
         await Game.StartGame();
     }
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("..");
     }
 }
