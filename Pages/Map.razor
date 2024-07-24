@@ -105,7 +105,7 @@
 
     private void Terminate()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo($"{Navigation.BaseUri}");
         Game.TerminateGame();
     }
 }

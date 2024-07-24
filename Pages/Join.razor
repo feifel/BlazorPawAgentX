@@ -82,17 +82,17 @@
             return;
         }
         await Game.JoinGame(FormData.PlayerName, FormData.GameId);
-        Navigation.NavigateTo("/map");
+        Navigation.NavigateTo($"{Navigation.BaseUri}/map");
     }
 
     private void StartGame()
     {
-        Navigation.NavigateTo("/map");
+        Navigation.NavigateTo($"{Navigation.BaseUri}/map");
     }
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo($"{Navigation.BaseUri}");
     }
 
     private async Task OnGameIdSelectedAsync()
