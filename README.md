@@ -8,9 +8,9 @@ To communicate between 2 applications running on a mobile phone, a WebServer is 
 
 ```mermaid
 classDiagram
-    SignalRServiceHub<|-- [BlazorPawAgentX](https://github.com/feifel/BlazorPawAgentX/tree/main)-1
-    SignalRServiceHub<|-- [BlazorPawAgentX](https://github.com/feifel/BlazorPawAgentX/tree/main)-2
-    SignalRServiceHub<|-- [BlazorPawAgentX](https://github.com/feifel/BlazorPawAgentX/tree/main)-3
+    SignalRServiceHub<|-- BlazorPawAgentX-1
+    SignalRServiceHub<|-- BlazorPawAgentX-2
+    SignalRServiceHub<|-- BlazorPawAgentX-3
 ```
 
 # Project creation tutorial
