@@ -69,8 +69,8 @@
     {
         var position = await JS.InvokeAsync<Position>("getGeoLocation");
         // TODO: remove this random offset, which is just used for tests of muliple players on the same device
-        position.Latitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
-        position.Longitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
+        //position.Latitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
+        //position.Longitude += ((Random.Shared.NextDouble() - 0.5) / 1000);
         return position;
     }
 
